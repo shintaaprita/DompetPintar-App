@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "dompet-mahasiswa",
+    "name": "Dompetku",
     "slug": "dompet-mahasiswa",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,11 +13,12 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "package": "com.dompetmahasiswa.app",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -43,6 +44,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e10f3fe0-8d43-4513-82b6-546fd30d8550"
+      }
     }
   }
 }
