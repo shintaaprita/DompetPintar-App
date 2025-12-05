@@ -9,7 +9,7 @@ Anggota Tim:
 - Sinta Aprita Sari - 701230307
  (Role: Backend, Membuat Desain UI, Penyusunan product backlog, coding modul beranda, testing, deployment)
 - Susilawati - 701230103 
-(Role: Desain Activity Diagram, Class Diagram, Penyusunan product backlog, testing, deployment)
+(Role: Desain Activity Diagram, Class Diagram, Use Case Diagram, Penyusunan product backlog, testing, deployment)
 
 
 📖 Deskripsi Singkat Dompetku
@@ -48,7 +48,7 @@ Git
 
 2. Instalasi
 Clone repository ini dan masuk ke folder project:
-git clone [MASUKKAN LINK GITHUB KALIAN DI SINI]
+git clone https://shintaaprita.github.io/DompetPintar-App/
 cd FinalProject_DompetPintar
 npm install
 
@@ -86,7 +86,7 @@ Link Deployment:
 Link Download APK: https://expo.dev/accounts/shintaprita/projects/dompet-mahasiswa/builds/2b183b01-fef1-4e7a-9cf4-b0a5ca7fc7e2 atau https://drive.google.com/file/d/1cuO6t3hy8UHYDJAdViLIt7QXdVVo3kY0/view?usp=sharing
 (Silakan download dan install di HP Android untuk pengujian penuh)
 
-Link Video Demo Aplikasi: [MASUKKAN LINK YOUTUBE / DRIVE VIDEO DEMO DI SINI]
+Link Video Demo Aplikasi:https://drive.google.com/file/d/1y_TTK7MBnhEgBALNAWy0wWfim2GnYVfl/view?usp=sharing
 
 
 🔑 Akun Demo 
