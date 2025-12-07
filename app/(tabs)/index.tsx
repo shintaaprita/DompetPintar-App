@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Alert, Modal, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as Notifications from 'expo-notifications'; 
+import * as Notifications from 'expo-notifications'; // Mengimpor modul notifikasi dari Expo untuk fitur alarm/pengingat
 
-// --- FIREBASE IMPORTS ---
+// Mengimpor konfigurasi database (db) dan autentikasi (auth) dari file config
 import { auth, db } from '../../firebaseConfig'; 
 import { onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, addDoc, query, onSnapshot, orderBy, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
@@ -38,10 +38,14 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // Fungsi listener ini memantau status login user secara real-time
     const unsubscribe = onAuthStateChanged(auth, (u) => {
+      // Jika user login, simpan data user ke state
       setUser(u);
+      // Matikan loading indicator karena proses cek sudah selesai
       setLoading(false);
     });
+    // Membersihkan listener saat komponen tidak digunakan lagi
     return unsubscribe;
   }, []);
 
@@ -132,8 +136,14 @@ function DashboardScreen({ user }: any) {
   const [activeTab, setActiveTab] = useState('transaksi');
 
   useEffect(() => {
+    // Cek keamanan: Pastikan ada User ID sebelum mengambil data
     if (!user?.uid) return;
+    // Membuat query untuk mengambil data dari koleksi 'transactions' milik user tersebut
+    // orderBy('createdAt', 'desc') mengurutkan data dari yang paling baru
     const q = query(collection(db, 'users', user.uid, 'transactions'), orderBy('createdAt', 'desc'));
+    // onSnapshot: Fitur Real-time Firebase.
+    // Kode ini akan 'mendengarkan' database. Jika ada data baru masuk/dihapus,
+    // aplikasi otomatis memperbarui tampilan tanpa perlu di-refresh.
     const unsub = onSnapshot(q, (snapshot) => {
       setTransactions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
@@ -149,8 +159,11 @@ function DashboardScreen({ user }: any) {
     return unsub;
   }, [user.uid]);
 
+  // Filter semua transaksi bertipe 'pemasukan', lalu jumlahkan totalnya
   const pemasukan = transactions.filter(t => t.type === 'pemasukan').reduce((acc, t) => acc + t.amount, 0);
+  // Filter semua transaksi bertipe 'pengeluaran', lalu jumlahkan totalnya
   const pengeluaran = transactions.filter(t => t.type === 'pengeluaran').reduce((acc, t) => acc + t.amount, 0);
+  // Hitung sisa saldo saat ini (Total Pemasukan dikurang Total Pengeluaran)
   const saldo = pemasukan - pengeluaran;
 
   const groupByCategory = (type: string) => {
@@ -189,8 +202,10 @@ function DashboardScreen({ user }: any) {
     let finalCategory = kategori;
     if (isAddingCategory && newCategoryName) finalCategory = newCategoryName;
 
+    // Menyiapkan objek data yang akan dikirim ke database
     const dataBaru = { type: tipe, amount: parseInt(nominal), category: finalCategory, note: catatan || finalCategory, createdAt: serverTimestamp() };
     setModalVisible(false); Keyboard.dismiss();
+    // Mengirim data ke Firestore pada path: users -> [UserID] -> transactions
     addDoc(collection(db, 'users', user.uid, 'transactions'), dataBaru);
   };
 
@@ -217,6 +232,7 @@ function DashboardScreen({ user }: any) {
     // Hitung berapa detik lagi dari sekarang
     const seconds = (triggerDate.getTime() - now.getTime()) / 1000;
 
+    // Perintah ke sistem HP untuk menjadwalkan notifikasi lokal
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "🔔 WARNING!",
