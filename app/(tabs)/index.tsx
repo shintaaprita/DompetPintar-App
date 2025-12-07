@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+// Import komponen UI bawaan React Native
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Alert, Modal, Keyboard } from 'react-native';
+// Import ikon dari Expo vector icons
 import { Ionicons } from '@expo/vector-icons';
+// Import modul notifikasi untuk fitur alarm
 import * as Notifications from 'expo-notifications'; // Mengimpor modul notifikasi dari Expo untuk fitur alarm/pengingat
 
 // Mengimpor konfigurasi database (db) dan autentikasi (auth) dari file config
@@ -17,6 +20,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// Data default untuk kategori agar user tidak perlu mengetik manual dari awal
 const DEFAULT_PENGELUARAN = ['Makan', 'Transport', 'Kosan', 'Belanja', 'Tagihan'];
 const DEFAULT_PEMASUKAN = ['Gaji', 'Kiriman', 'Bonus', 'Freelance'];
 
@@ -24,7 +28,7 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Minta Izin Notifikasi
+  // useEffect ini dijalankan sekali saat aplikasi dibuka untuk meminta izin notifikasi
   useEffect(() => {
     async function registerForPushNotificationsAsync() {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -49,17 +53,21 @@ export default function App() {
     return unsubscribe;
   }, []);
 
+  // Tampilkan loading spinner jika sedang memuat
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#4f46e5" /></View>;
+  // Logika navigasi sederhana: Jika ada user -> Dashboard, Jika tidak -> Login Screen
   return user ? <DashboardScreen user={user} /> : <LoginScreen />;
 }
 
-// --- 1. LOGIN SCREEN ---
+// LOGIN SCREEN
 function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // Toggle untuk pindah mode antara Login dan Daftar
   const [isRegister, setIsRegister] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Fungsi menangani tombol Masuk/Daftar
   const handleAuth = async () => {
     // Validasi input (cegah form kosong/password pendek)
     if (!email || !password) return Alert.alert("Eits!", "Email dan Password wajib diisi ya.");
@@ -92,19 +100,28 @@ function LoginScreen() {
 
   return (
     <View style={styles.loginContainer}>
+      {/* Logo Aplikasi */}
       <View style={styles.iconBulat}><Ionicons name="wallet" size={40} color="#fff" /></View>
       <Text style={styles.judulLogin}>{isRegister ? 'Daftar Akun' : 'Login Dompet'}</Text>
+      
+      {/* Input Email */}
       <View style={styles.inputBox}>
         <Ionicons name="mail" size={20} color="#9ca3af" />
         <TextInput placeholder="Email..." style={styles.input} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address"/>
       </View>
+      
+      {/* Input Password */}
       <View style={styles.inputBox}>
         <Ionicons name="lock-closed" size={20} color="#9ca3af" />
         <TextInput placeholder="Password min-8 karakter" style={styles.input} value={password} onChangeText={setPassword} secureTextEntry />
       </View>
+
+      {/* Tombol Aksi */}
       <TouchableOpacity style={styles.tombolLogin} onPress={handleAuth} disabled={loading}>
         {loading ? <ActivityIndicator color="#fff"/> : <Text style={styles.teksTombol}>{isRegister ? 'Daftar Sekarang' : 'Masuk Aplikasi'}</Text>}
       </TouchableOpacity>
+
+      {/* Link ganti mode Login/Daftar */}
       <TouchableOpacity onPress={() => setIsRegister(!isRegister)} style={{marginTop: 20}}>
         <Text style={{color: '#4f46e5', fontWeight:'600'}}>{isRegister ? 'Sudah punya akun? Login di sini' : 'Belum punya akun? Daftar dulu'}</Text>
       </TouchableOpacity>
@@ -112,27 +129,32 @@ function LoginScreen() {
   );
 }
 
-// --- 2. DASHBOARD LENGKAP ---
+// DASHBOARD UTAMA (SETELAH LOGIN)
 function DashboardScreen({ user }: any) {
+  // State untuk menyimpan data transaksi dan reminder dari database
   const [transactions, setTransactions] = useState<any[]>([]);
   const [reminders, setReminders] = useState<any[]>([]);
-  
+
+  // State untuk Modal Transaksi (Input Pemasukan/Pengeluaran)
   const [modalVisible, setModalVisible] = useState(false);
   const [tipe, setTipe] = useState('pemasukan'); 
   const [nominal, setNominal] = useState('');
   const [catatan, setCatatan] = useState(''); 
   const [kategori, setKategori] = useState(''); 
-  
+
+  // State untuk Kategori Dinamis
   const [listKatPengeluaran, setListKatPengeluaran] = useState<string[]>(DEFAULT_PENGELUARAN);
   const [listKatPemasukan, setListKatPemasukan] = useState<string[]>(DEFAULT_PEMASUKAN);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
+  // State untuk Modal Reminder (Tagihan)
   const [modalReminderVisible, setModalReminderVisible] = useState(false);
   const [reminderTitle, setReminderTitle] = useState('');
   const [reminderAmount, setReminderAmount] = useState(''); 
   const [reminderDate, setReminderDate] = useState(''); 
-  
+
+  // Tab aktif (Transaksi vs Ringkasan)
   const [activeTab, setActiveTab] = useState('transaksi');
 
   useEffect(() => {
@@ -166,6 +188,7 @@ function DashboardScreen({ user }: any) {
   // Hitung sisa saldo saat ini (Total Pemasukan dikurang Total Pengeluaran)
   const saldo = pemasukan - pengeluaran;
 
+  // Fungsi grouping untuk Ringkasan/Chart (Mengelompokkan pengeluaran berdasarkan kategori)
   const groupByCategory = (type: string) => {
     const summary: any = {};
     transactions.filter(t => t.type === type).forEach(t => {
@@ -177,6 +200,7 @@ function DashboardScreen({ user }: any) {
   const ringkasanPengeluaran = groupByCategory('pengeluaran');
   const ringkasanPemasukan = groupByCategory('pemasukan');
 
+  // Fungsi Logout
   const handleLogout = () => {
     Alert.alert("Keluar", "Yakin mau logout?", [
       { text: "Batal", style: "cancel" },
@@ -184,12 +208,14 @@ function DashboardScreen({ user }: any) {
     ]);
   };
 
+  // Fungsi Buka Modal Transaksi
   const bukaModal = (tipeBaru: string) => {
     setTipe(tipeBaru); setNominal(''); setCatatan(''); setIsAddingCategory(false); setNewCategoryName('');
     setKategori(tipeBaru === 'pemasukan' ? listKatPemasukan[0] : listKatPengeluaran[0]);
     setModalVisible(true);
   };
 
+  // Fungsi Tambah Kategori Baru (di dalam modal)
   const handleTambahKategori = () => {
     if(!newCategoryName) return;
     if(tipe === 'pemasukan') setListKatPemasukan([...listKatPemasukan, newCategoryName]);
@@ -197,6 +223,7 @@ function DashboardScreen({ user }: any) {
     setKategori(newCategoryName); setIsAddingCategory(false); setNewCategoryName('');
   };
 
+  // Logika create data transaksi
   const handleSimpan = () => {
     if (!nominal) return Alert.alert("Eits!", "Nominal kosong.");
     let finalCategory = kategori;
@@ -205,10 +232,11 @@ function DashboardScreen({ user }: any) {
     // Menyiapkan objek data yang akan dikirim ke database
     const dataBaru = { type: tipe, amount: parseInt(nominal), category: finalCategory, note: catatan || finalCategory, createdAt: serverTimestamp() };
     setModalVisible(false); Keyboard.dismiss();
-    // Mengirim data ke Firestore pada path: users -> [UserID] -> transactions
+    // Mengirim data ke Firestore pada path: users -> [UserID] -> transactions (simpan ke database)
     addDoc(collection(db, 'users', user.uid, 'transactions'), dataBaru);
   };
 
+  // Logika hapus data
   const handleDelete = (id: string) => {
     Alert.alert("Hapus?", "Yakin hapus data ini?", [{ text: "Batal" }, { text: "Hapus", onPress: () => deleteDoc(doc(db, 'users', user.uid, 'transactions', id)) }]);
   };
@@ -229,7 +257,7 @@ function DashboardScreen({ user }: any) {
       triggerDate.setMonth(triggerDate.getMonth() + 1);
     }
 
-    // Hitung berapa detik lagi dari sekarang
+    // Hitung durasi detik dari sekarang sampai waktu alarm
     const seconds = (triggerDate.getTime() - now.getTime()) / 1000;
 
     // Perintah ke sistem HP untuk menjadwalkan notifikasi lokal
@@ -248,16 +276,17 @@ function DashboardScreen({ user }: any) {
     Alert.alert("Alarm Diset ✅", `Akan bunyi tgl ${triggerDate.getDate()} ${bulanIndo[triggerDate.getMonth()]} jam 09:00 Pagi.`);
   };
 
+  // Simpan Reminder ke Database & Jadwalkan Alarm
   const handleSimpanReminder = () => {
     if (!reminderTitle || !reminderDate || !reminderAmount) return Alert.alert("Eits", "Isi lengkap ya.");
     
-    // 1. TUTUP MODAL DULUAN (Biar Terasa Cepat)
+    // TUTUP MODAL DULUAN (Biar Terasa Cepat)
     setModalReminderVisible(false);
     
-    // 2. JADWALKAN ALARM DI HP (Langsung, tanpa nunggu internet)
+    // Panggil fungsi penjadwalan notifikasi
     jadwalkanNotifikasi(reminderTitle, reminderAmount, parseInt(reminderDate));
 
-    // 3. Simpan ke Database (Di belakang layar)
+    // Simpan data reminder ke database agar muncul di dashboard
     addDoc(collection(db, 'users', user.uid, 'reminders'), {
       title: reminderTitle, amount: parseInt(reminderAmount), date: parseInt(reminderDate), createdAt: serverTimestamp()
     });
@@ -266,9 +295,11 @@ function DashboardScreen({ user }: any) {
   };
 
   const handleDeleteReminder = (id: string) => deleteDoc(doc(db, 'users', user.uid, 'reminders', id));
-  
+
+  // Helper function untuk format Rupiah
   const formatRupiah = (num: number) => 'Rp ' + (num || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  
+
+  // Helper function untuk format Tanggal
   const formatTanggal = (timestamp: any) => {
     if (!timestamp) return 'Baru saja';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -277,6 +308,7 @@ function DashboardScreen({ user }: any) {
 
   const today = new Date().getDate();
 
+  // === RENDER UI DASHBOARD ===
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -473,6 +505,7 @@ function DashboardScreen({ user }: any) {
   );
 }
 
+// === STYLESHEET (Desain Tampilan) ===
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   container: { flex: 1, backgroundColor: '#f8fafc' },
