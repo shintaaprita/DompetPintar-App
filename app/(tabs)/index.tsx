@@ -57,20 +57,24 @@ function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleAuth = async () => {
+    // Validasi input (cegah form kosong/password pendek)
     if (!email || !password) return Alert.alert("Eits!", "Email dan Password wajib diisi ya.");
     if (password.length < 8) return Alert.alert("Password Pendek", "Password minimal 8 karakter.");
 
     setLoading(true);
     try {
       if (isRegister) {
+        // Daftar: Buat akun di Firebase > Logout > Suruh login ulang
         await createUserWithEmailAndPassword(auth, email, password);
         await signOut(auth); 
         Alert.alert("Sukses", "Akun berhasil dibuat! Silakan login.");
         setIsRegister(false);
       } else {
+        // Login: Cek kredensial ke firebase
         await signInWithEmailAndPassword(auth, email, password);
       }
     } catch (err: any) {
+      // Error Handling: Menerjemahkan kode error mesin ke bahasa manusia
       let pesanError = "Terjadi kesalahan coba cek kembali";
       if (err.code === 'auth/email-already-in-use') pesanError = "Akun ini sudah terdaftar.";
       else if (err.code === 'auth/invalid-email') pesanError = "Format email salah.";
